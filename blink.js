@@ -7,8 +7,12 @@ import {
     GetSystemMetrics,
     WaitMessage,
     PostQuitMessage,
+    SetClassLongPtrW,
+    SetClassLongW,
+    LoadIconW,
     MessageBoxW,
 } from "user32.dll";
+import { GetModuleHandleW } from "kernel32.dll";
 import { SetProcessDpiAwareness } from 'shcore.dll';
 import {
     wkeInitializeEx,
@@ -24,11 +28,14 @@ import {
     wkeLoadURL,
     wkeSetTransparent,
     wkeLoadHTML,
+    wkeGetHostHWND,
     wkeSetViewSettings,
+    wkeNetGetFavicon,
     wkeRunJS,
+    wkeGetWindowHandle,
     wkeOnDidCreateScriptContext,
 } from cdecl.utf8`miniblink_4949_x32.dll`;
-import { go } from "yueji";
+import { addr } from "yueji";
 var wcount = 0;
 function createWindow(load, data) {
     wcount++;
@@ -52,8 +59,16 @@ function createWindow(load, data) {
     wkeOnWindowClosing(w, quit, null);
     wkeOnLoadingFinish(w, onload, null);
     wkeSetTransparent(w, true);
-    wkeShowWindow(w, SW_SHOWNORMAL);
+
     load(w, data);
+    var hWnd = wkeGetHostHWND(w);
+    var h = GetModuleHandleW(null);
+    var icon = LoadIconW(h, 0x1000);
+    if (icon) {
+        SetClassLongW(hWnd, GCLP_HICON, icon);
+        SetClassLongW(hWnd, GCLP_HICONSM, icon);
+    }
+    wkeShowWindow(w, SW_SHOWNORMAL);
     return w;
 }
 var x = GetSystemMetrics(SM_CXSCREEN);
