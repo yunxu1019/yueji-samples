@@ -35,7 +35,7 @@ import {
     wkeGetWindowHandle,
     wkeOnDidCreateScriptContext,
 } from cdecl.utf8`miniblink_4949_x32.dll`;
-import { addr } from "yueji";
+import { addr, go } from "yueji";
 var wcount = 0;
 function createWindow(load, data) {
     wcount++;
@@ -80,9 +80,6 @@ var w_ = 860 * x1 / x | 0;
 var h_ = 600 * y1 / y | 0;
 var factor = x1 / x;
 createWindow(wkeLoadHTML, D`./俄罗斯方块.html`);
-go(function () {
-    MessageBoxW(null, '脸', '不要了', null);
-})
 var msg = new MSG;
 while (GetMessageW(msg, null, 0, 0)) {
     TranslateMessage(msg);
