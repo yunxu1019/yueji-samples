@@ -80,9 +80,12 @@ var w_ = 860 * x1 / x | 0;
 var h_ = 600 * y1 / y | 0;
 var factor = x1 / x;
 createWindow(wkeLoadHTML, D`./俄罗斯方块.html`);
-// createWindow(wkeLoadURL, `http://localhost`);
+go(function () {
+    MessageBoxW(null, '脸', '不要了', null);
+})
 var msg = new MSG;
 while (GetMessageW(msg, null, 0, 0)) {
     TranslateMessage(msg);
     DispatchMessageW(msg);
 }
+// createWindow(wkeLoadURL, `http://localhost`);
