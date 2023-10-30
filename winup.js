@@ -95,7 +95,7 @@ var mouseDrag = function (hWnd) {
     }
     w_rect.x = p.x - mousePosition.x + w_rect.x | 0;
     w_rect.y = p.y - mousePosition.y + w_rect.y | 0;
-    MoveWindow(hWnd, w_rect.x, w_rect.y, w_rect.w, w_rect.h, false);
+    MoveWindow(hWnd, w_rect.x, w_rect.y, w_rect.w, w_rect.h, true);// win7上只能用true
     mousePosition.x = p.x;
     mousePosition.y = p.y;
     mfree(p);
@@ -193,8 +193,8 @@ function drawText(gp, color, text, fontSize, rect, fFamily, rectref) {
     GdipCreateFontFamilyFromName(fFamily, null, addr(family));
     GdipCreateFont(family, fontSize, 0, 0, addr(font));
     // debugger;
-    GdipCreateStringFormat(0x00007400, 0, addr(format));// 不知道为什么会创建失败
-    if (format) GdipSetStringFormatTrimming(format, 5);
+    GdipCreateStringFormat(0x00007400, 0, addr(format));
+    GdipSetStringFormatTrimming(format, 5);
     GdipCreateSolidFill(color | 0, addr(brush));
     if (rectref) {
         GdipMeasureString(gp, text, text.length, font, rect, format, rectref, addr(x), addr(y));
@@ -208,7 +208,7 @@ function drawText(gp, color, text, fontSize, rect, fFamily, rectref) {
     GdipDeletePath(path);
     GdipDeleteFont(font);
     GdipDeleteBrush(brush);
-    if (format) GdipDeleteStringFormat(format);
+    GdipDeleteStringFormat(format);
 }
 function drawButton(gp, shape, fillcolor, bordercolor, outline, outcolor) {
     EFRONT_BUTTON: shape;// 指定 shape 的类型为 EFRONT_BUTTON
@@ -328,7 +328,7 @@ function winMain() {
         lpfnWndProc: eventsHandle,
         cbClsExtra: null,
         cbWndExtra: null,
-        hbrBackground: COLOR_BACKGROUND,
+        hbrBackground: null,
         hIcon: icon,
         hIconSm: icon,
         hCursor: cursor,
@@ -338,11 +338,11 @@ function winMain() {
     RegisterClassExW(wClass);
     var hWnd = CreateWindowExW(0, className, "一剑隔世", WS_POPUP, w_rect.x, w_rect.y, w_rect.w, w_rect.h, null, null, h, null);
     if (!hWnd) return;
+    var gptoken = null, gpstart = new GdiplusStartupInput(1, 0, 0, 0);
+    GdiplusStartup(addr(gptoken), gpstart, null);
     ShowWindow(hWnd, SW_SHOWNORMAL);
     drawFrame(hWnd);
     UpdateWindow(hWnd);
-    var gptoken = null, gpstart = new GdiplusStartupInput(1, 0, 0, 0);
-    GdiplusStartup(addr(gptoken), gpstart, null);
     var msg = new MSG;
     while (GetMessageW(msg, null, 0, 0)) {
         TranslateMessage(msg);
