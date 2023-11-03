@@ -11,13 +11,12 @@ import {
     SDL_EventState,
     SDL_DetachThread,
     SDL_GetWindowSize,
-} from cdecl.utf8`SDL2.dll`;
+    SDL_Quit
+} from cdecl.utf8.include`SDL2.dll`;
 import "sdl/SDL.h";
 import { random, array, mfree, addr, jsfree } from 'yueji';
 var SCREEN_WIDTH = 640;
 var SCREEN_HEIGHT = 480;
-SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
-SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
 var flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
 if (SDL_Init(flags) < 0) return;
 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
@@ -128,3 +127,5 @@ loop: while (SDL_WaitEvent(e)) {
         default:
     }
 }
+
+SDL_Quit()
