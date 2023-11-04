@@ -17,6 +17,7 @@ import { SetProcessDpiAwareness } from 'shcore.dll';
 import {
     wkeInitializeEx,
     wkeCreateWebWindow,
+    wkeOnWindowDestroy,
     wkeOnWindowClosing,
     wkeDestroyWebWindow,
     wkeShowWindow,
@@ -29,6 +30,7 @@ import {
     wkeSetTransparent,
     wkeLoadHTML,
     wkeGetHostHWND,
+    SendMessageW,
     wkeSetViewSettings,
     wkeNetGetFavicon,
     wkeRunJS,
@@ -36,13 +38,11 @@ import {
     wkeOnDidCreateScriptContext,
 } from cdecl.utf8`miniblink_4949_x32.dll`;
 import { addr, go } from "yueji";
-var wcount = 0;
 function createWindow(load, data) {
-    wcount++;
     function quit() {
-        wcount--;
         wkeDestroyWebWindow(w);
-        if (!wcount) PostQuitMessage(null);
+        PostQuitMessage(null);
+        return 1;
     }
     function onload() {
         var t = wkeGetTitle(w);
@@ -56,7 +56,7 @@ function createWindow(load, data) {
     wkeSetZoomFactor(w, factor);
     wkeMoveToCenter(w);
     wkeSetWindowTitle(w, `正在加载...`);
-    wkeOnWindowClosing(w, quit, null);
+    wkeOnWindowDestroy(w, quit, null);
     wkeOnLoadingFinish(w, onload, null);
     wkeSetTransparent(w, true);
 
