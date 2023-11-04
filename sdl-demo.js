@@ -2,6 +2,7 @@ import {
     SDL_Init,
     SDL_CreateWindow,
     SDL_FillRect,
+    SDL_DestroyWindow,
     SDL_GetWindowSurface,
     SDL_MapRGB,
     SDL_UpdateWindowSurface,
@@ -15,6 +16,7 @@ import {
 } from cdecl.utf8.include`SDL2.dll`;
 import "sdl/SDL.h";
 import { random, array, mfree, addr, jsfree } from 'yueji';
+import { ExitProcess } from "Kernel32.dll";
 var SCREEN_WIDTH = 640;
 var SCREEN_HEIGHT = 480;
 var flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
@@ -127,5 +129,5 @@ loop: while (SDL_WaitEvent(e)) {
         default:
     }
 }
-
+SDL_DestroyWindow(window);
 SDL_Quit()
