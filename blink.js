@@ -30,7 +30,6 @@ import {
     wkeSetTransparent,
     wkeLoadHTML,
     wkeGetHostHWND,
-    SendMessageW,
     wkeSetViewSettings,
     wkeNetGetFavicon,
     wkeRunJS,
