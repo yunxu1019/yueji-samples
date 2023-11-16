@@ -84,4 +84,3 @@ while (GetMessageW(msg, null, 0, 0)) {
     TranslateMessage(msg);
     DispatchMessageW(msg);
 }
-// createWindow(wkeLoadURL, `http://localhost`);
