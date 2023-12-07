@@ -333,12 +333,15 @@ function drawText(gp, color, text, fontSize, rect, fFamily, rectref) {
     GdipCreateStringFormat(0x00007400, 0, addr(format));
     GdipSetStringFormatTrimming(format, 5);
     GdipCreateSolidFill(color | 0, addr(brush));
+    var a = buffer(1024, 1);
+    strcpy(a, text);
     if (rectref) {
-        GdipMeasureString(gp, text, text.length, font, rect, format, rectref, addr(x), addr(y));
+        GdipMeasureString(gp, a, a.length, font, rect, format, rectref, addr(x), addr(y));
     }
     GdipCreatePath(0, addr(path));
     GdipResetPath(path);
-    GdipAddPathString(path, text, text.length, family, 0, fontSize, rect, format);
+    GdipAddPathString(path, a, a.length, family, 0, fontSize, rect, format);
+    jsfree(a);
     GdipWindingModeOutline(path, 0, 1.0);
     GdipFillPath(gp, brush, path);
     GdipDeleteFontFamily(family);
