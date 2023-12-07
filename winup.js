@@ -9,12 +9,19 @@ import {
     GetProcessHeap,
     HeapAlloc,
     HeapFree,
+    ExitProcess,
     CreateFileW,
 } from "Kernel32.dll";
 var alert = function (content, title = "错误") {
     MessageBoxW(null, content, title, MB_OK | MB_ICONASTERISK);
 };
-import { SHGetSpecialFolderPathW, SHBrowseForFolderW, GetFileNameFromBrowse, SHCreateItemFromParsingName, ExitProcess } from "Shell32.dll";
+import {
+    SHGetSpecialFolderPathW,
+    SHBrowseForFolderW,
+    GetFileNameFromBrowse,
+    SHCreateItemFromParsingName,
+    SHGetPathFromIDListW
+} from "Shell32.dll";
 import { CoCreateInstance, CoDisconnectObject, IIDFromString, CLSIDFromString, CoUninitialize, CoInitializeEx, CoTaskMemFree, OleUninitialize, OleInitializ } from "Ole32.dll";
 import {
     RegisterClassExW,
@@ -143,10 +150,24 @@ var mouseMove = function (hWnd) {
         mouseDrag(hWnd);
     }
 };
+var tempTarget = buffer(MAX_PATH, 1);
+var choosingfn = function (hWnd, uMsg, lParam, lpData) {
+    var pszPath = buffer(MAX_PATH, 1);
+    switch (uMsg) {
+        case BFFM_INITIALIZED:
+            SendMessageW(hWnd, BFFM_SETSELECTION, true, targetPath);
+            break;
+        case BFFM_SELCHANGED:
+            SHGetPathFromIDListW(lParam, tempTarget);
+            SendMessageW(hWnd, BFFM_SETSTATUSTEXT, 0, pszPath);
+            break;
+    }
+    jsfree(pszPath);
+    return 0;
+}
+
 var browsForFolder = function (hWnd) {
-    var tmp = buffer(MAX_PATH, 1);
     var title = L`选择文件夹`;
-    tmp[0] = 0;
     var CLSID_FileOpenDialog = G`dc1c5a9c-e88a-4dde-a5a1-60f82a20aef7`;
     var IID_IFileOpenDialog = G`d57c7288-d4ad-4768-be02-9d969532d960`;
     var IID_IShellItem = G`43826d1e-e718-42ee-bc55-a1e261c37bfe`;
@@ -154,10 +175,9 @@ var browsForFolder = function (hWnd) {
 
     // https://github.com/godotengine/godot/blob/80de898d721f952dac0b102d48bb73d6b02ee1e8/platform/windows/display_server_windows.cpp#L270
     var pfd = 0;
-    IFileDialog: pfd;
     var hr = CoCreateInstance && CoCreateInstance(CLSID_FileOpenDialog, null, CLSCTX_ALL, IID_IFileOpenDialog, addr(pfd));
-
     if (hr >= 0) {
+        IFileDialog: pfd;
         noframe = true;
         pfd.SetTitle(title);
         var path1 = 0;
@@ -194,20 +214,26 @@ var browsForFolder = function (hWnd) {
         noframe = false;
     }
     else {
+        var tmp = buffer(MAX_PATH, 1);
+        strcpy(tmp, targetPath);
+        var flag = BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT;
+
         var a = new BROWSEINFOW({
             hwndOwner: hWnd,
             pidlRoot: null,
             pszDisplayName: tmp,
             lpszTitle: title,
-            ulFlags: BIF_RETURNONLYFSDIRS,
-            lpfn: null,
+            ulFlags: flag,
+            lpfn: choosingfn,
             lParam: null,
             iImage: null,
         });
-        SHBrowseForFolderW(a);
+        if (SHBrowseForFolderW(a)) {
+            strcpy(targetPath, tempTarget);
+        }
+        jsfree(tmp);
     }
 
-    mfree(tmp);
 };
 
 var mouseUp = function (hWnd) {
@@ -518,11 +544,9 @@ function initenv() {
     var res;
     if (GetEnvironmentVariableW) res = GetEnvironmentVariableW("ProgramW6432\0\0\0\0\0\0\0\0\0", targetPath, targetPath.length);
     if (!res) SHGetSpecialFolderPathW(null, targetPath, CSIDL_PROGRAM_FILES, false);
-    targetPath = Utf16(targetPath);
-    var tmp = targetPath;
-    targetPath = targetPath + "\\";
-    jsfree(tmp);
+    Utf16(targetPath);
 }
 initenv();
 setFactor();
 winMain();
+ExitProcess();
