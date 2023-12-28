@@ -111,7 +111,7 @@ var mouseActived = false, mouseMoved = false;
 var mousePosition = new POINT(0, 0);
 var cursor_top = 0.0;
 var cursor_left = 0.0;
-var currentHover = null;
+var currentHover = 1;
 var mouseDrag = function (hWnd) {
     if (!mouseMoved) {
         var p = new POINT;
@@ -162,7 +162,6 @@ var choosingfn = function (hWnd, uMsg, lParam, lpData) {
             SendMessageW(hWnd, BFFM_SETSTATUSTEXT, 0, pszPath);
             break;
     }
-    jsfree(pszPath);
     return 0;
 }
 
@@ -231,7 +230,6 @@ var browsForFolder = function (hWnd) {
         if (SHBrowseForFolderW(a)) {
             strcpy(targetPath, tempTarget);
         }
-        jsfree(tmp);
     }
 
 };
@@ -267,7 +265,8 @@ var noframe = false;
 var eventsHandle = function (hWnd, uMsg, wParam, lParam) {
     switch (uMsg) {
         case WM_CREATE:
-            SetTimer(hWnd, 1, 32, null);
+
+            SetTimer(hWnd, 1, 16, null);
             var tmp = GetWindowLongW(hWnd, GWL_EXSTYLE);
             SetWindowLongW(hWnd, GWL_EXSTYLE, tmp);
             SetLayeredWindowAttributes(hWnd, 0, 255, 2);
@@ -294,7 +293,6 @@ var eventsHandle = function (hWnd, uMsg, wParam, lParam) {
             break;
         case WM_TIMER:
             drawFrame(hWnd);
-            UpdateWindow(hWnd);
             break;
         default:
             return DefWindowProcW(hWnd, uMsg, wParam, lParam);
@@ -341,7 +339,6 @@ function drawText(gp, color, text, fontSize, rect, fFamily, rectref) {
     GdipCreatePath(0, addr(path));
     GdipResetPath(path);
     GdipAddPathString(path, a, a.length, family, 0, fontSize, rect, format);
-    jsfree(a);
     GdipWindingModeOutline(path, 0, 1.0);
     GdipFillPath(gp, brush, path);
     GdipDeleteFontFamily(family);
@@ -452,6 +449,34 @@ function deleteShapes() {
 var bitmap = null;
 function drawFrame(hWnd) {
     if (noframe) return;
+    var isCursorIn = function (shape) {
+        var isIn = 0;
+        GdipIsVisiblePathPoint(shape, cursor_left, cursor_top, gp, addr(isIn));
+        return isIn;
+    };
+    var isCursorOn = function (rect) {
+        var left = rect[0];
+        var top = rect[1];
+        var right = rect[2] + left;
+        var bottom = rect[3] + top;
+
+        return cursor_left >= left && cursor_left <= right && cursor_top >= top && cursor_top <= bottom;
+    }
+    updateCursor(hWnd);
+    var lastHover = currentHover;
+    if (isCursorIn(closeBtn.back)) {
+        currentHover = closeBtn;
+    }
+    else if (isCursorIn(setupBtn.back)) {
+        currentHover = setupBtn;
+    }
+    else if (isCursorOn(folder_rect)) {
+        currentHover = folder_rect;
+    }
+    else {
+        currentHover = null;
+    }
+    if (lastHover === currentHover) return;
     var gp = 0, matrix = 0;
     var dc = GetDC(hWnd);
     var tmpDc = CreateCompatibleDC(dc);
@@ -473,38 +498,13 @@ function drawFrame(hWnd) {
     if (!closeBtn.clip) {
         createShapes();
     }
-    updateCursor(hWnd);
-    var isCursorIn = function (shape) {
-        var isIn = 0;
-        GdipIsVisiblePathPoint(shape, cursor_left, cursor_top, gp, addr(isIn));
-        return isIn;
-    };
-    var isCursorOn = function (rect) {
-        var left = rect[0];
-        var top = rect[1];
-        var right = rect[2] + left;
-        var bottom = rect[3] + top;
-
-        return cursor_left >= left && cursor_left <= right && cursor_top >= top && cursor_top <= bottom;
-    }
-    if (isCursorIn(closeBtn.back)) {
-        currentHover = closeBtn;
-    }
-    else if (isCursorIn(setupBtn.back)) {
-        currentHover = setupBtn;
-    }
-    else if (isCursorOn(folder_rect)) {
-        currentHover = folder_rect;
-    }
-    else {
-        currentHover = null;
-    }
     drawShapes(gp);
     BitBlt(dc, 0, 0, w_rect.w, w_rect.h, tmpDc, 0, 0, SRCCOPY);
     GdipReleaseDC(gp, tmpDc);
     GdipDeleteGraphics(gp);
     ReleaseDC(hWnd, dc);
     DeleteDC(tmpDc);
+    UpdateWindow(hWnd);
     return 0;
 }
 function winMain() {
@@ -527,13 +527,12 @@ function winMain() {
         lpszMenuName: null,
     });
     RegisterClassExW(wClass);
-    var hWnd = CreateWindowExW(0, className, "一剑隔世\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", WS_POPUP, w_rect.x, w_rect.y, w_rect.w, w_rect.h, null, null, h, null);
+    var hWnd = CreateWindowExW(WS_EX_LAYERED, className, "一剑隔世\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", WS_POPUP, w_rect.x, w_rect.y, w_rect.w, w_rect.h, null, null, h, null);
     if (!hWnd) return;
     var gptoken = null, gpstart = new GdiplusStartupInput(1, 0, 0, 0);
     GdiplusStartup(addr(gptoken), gpstart, null);
     ShowWindow(hWnd, SW_SHOWNORMAL);
     drawFrame(hWnd);
-    UpdateWindow(hWnd);
     var msg = new MSG;
     while (GetMessageW(msg, null, 0, 0)) {
         TranslateMessage(msg);

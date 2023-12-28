@@ -112,7 +112,6 @@ function 演示() {
     rgb = (rgb << 3 | rgb >> 21) & 0xffffff;
     var arr = 随机数组(10);
     递归排序(arr, 0, arr.length - 1);
-    jsfree(arr);
     ignore = false;
 }
 var e = new SDL_Event;
