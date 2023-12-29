@@ -60,7 +60,6 @@ function 渲染(arr, rgb) {
     SDL_FillRect(screenSurface, rect, color);
     SDL_UpdateWindowSurface(window);
     SDL_Delay(2)
-    mfree(rect);
 };
 function 随机数组(size) {
     var a = array(size);

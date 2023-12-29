@@ -119,7 +119,6 @@ var mouseDrag = function (hWnd) {
         var deltax = p.x - mousePosition.x;
         var deltay = p.y - mousePosition.y;
         if (deltax * deltax + deltay * deltay < factor * 3) {
-            mfree(p);
             return;
         }
         mouseMoved = true;
@@ -129,7 +128,6 @@ var mouseDrag = function (hWnd) {
         MoveWindow(hWnd, w_rect.x, w_rect.y, w_rect.w, w_rect.h, true);// win7上只能用true
         mousePosition.x = p.x;
         mousePosition.y = p.y;
-        mfree(p);
         ReleaseCapture();
         SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
     }
@@ -142,8 +140,6 @@ var updateCursor = function (hWnd) {
     GetWindowRect(hWnd, rect);
     cursor_left = (p.x - rect.left) / factor;
     cursor_top = (p.y - rect.top) / factor;
-    mfree(p);
-    mfree(rect);
 }
 var mouseMove = function (hWnd) {
     if (mouseActived) {
@@ -258,7 +254,6 @@ var mouseDown = function (hWnd) {
     GetCursorPos(mousePosition);
     w_rect.x = r.left;
     w_rect.y = r.top;
-    mfree(r);
 };
 
 var noframe = false;
