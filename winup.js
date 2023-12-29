@@ -160,7 +160,9 @@ var choosingfn = function (hWnd, uMsg, lParam, lpData) {
     }
     return 0;
 }
-
+var initiallized = false;
+var pfd = 0;
+IFileDialog: pfd;
 var browsForFolder = function (hWnd) {
     var title = L`选择文件夹`;
     var CLSID_FileOpenDialog = G`dc1c5a9c-e88a-4dde-a5a1-60f82a20aef7`;
@@ -169,44 +171,47 @@ var browsForFolder = function (hWnd) {
     // https://github.com/ncruces/zenity/blob/2f486f1d0107c245da13182649e70457335aec8f/internal/win/shell32.go#L54
 
     // https://github.com/godotengine/godot/blob/80de898d721f952dac0b102d48bb73d6b02ee1e8/platform/windows/display_server_windows.cpp#L270
-    var pfd = 0;
-    var hr = CoCreateInstance && CoCreateInstance(CLSID_FileOpenDialog, null, CLSCTX_ALL, IID_IFileOpenDialog, addr(pfd));
-    if (hr >= 0) {
-        IFileDialog: pfd;
-        noframe = true;
-        pfd.SetTitle(title);
-        var path1 = 0;
-        hr = SHCreateItemFromParsingName(targetPath, null, IID_IShellItem, addr(path1));
-        if (hr >= 0) {
-            IShellItem: path1;
-            pfd.SetDefaultFolder(path1);
-            pfd.SetFolder(path1);
-            path1.Release();
-        }
-        var flags = 0;
-        pfd.GetOptions(addr(flags));
-        flags |= FOS_PICKFOLDERS;
-        pfd.SetOptions(flags | FOS_FORCEFILESYSTEM);
-        // pfd.SetFileTypes(0,0);
-        // pfd.SetFileTypeIndex(0);
-        hr = pfd.Show(hWnd);
-        if (hr >= 0) {
-            var result = 0;
-            hr = pfd.GetResult(addr(result));
-            if (hr >= 0) {
-                IShellItem: result;
-                var file_path = 0;
-                hr = result.GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, addr(file_path));
-                if (hr >= 0) {
-                    strcpy(targetPath, file_path);
-                    CoTaskMemFree(file_path);
-                }
-                result.Release();
+    noframe = true;
+    if (!initiallized) {
+        if (CoInitializeEx) {
+            var hr = CoInitializeEx(null, COINIT_APARTMENTTHREADED);
+            initiallized = hr >= 0;
+            if (initiallized) {
+                hr = CoCreateInstance(CLSID_FileOpenDialog, null, CLSCTX_ALL, IID_IFileOpenDialog, addr(pfd));
             }
         }
-        pfd.Release();
-        CoDisconnectObject(pfd, 0);
-        noframe = false;
+        if (hr >= 0) {
+            pfd.SetTitle(title);
+            var path1 = 0;
+            if (SHCreateItemFromParsingName) {
+                hr = SHCreateItemFromParsingName(targetPath, null, IID_IShellItem, addr(path1));
+                if (hr >= 0) {
+                    IShellItem: path1;
+                    pfd.SetDefaultFolder(path1);
+                    pfd.SetFolder(path1);
+                    path1.Release();
+                }
+            }
+            var flags = 0;
+            pfd.GetOptions(addr(flags));
+            flags |= FOS_PICKFOLDERS;
+            pfd.SetOptions(flags | FOS_FORCEFILESYSTEM);
+        }
+    }
+    if (initiallized) {
+        hr = pfd.Show(hWnd);
+        var result = 0;
+        hr = pfd.GetResult(addr(result));
+        if (hr >= 0) {
+            IShellItem: result;
+            var file_path = 0;
+            hr = result.GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, addr(file_path));
+            if (hr >= 0) {
+                strcpy(targetPath, file_path);
+                CoTaskMemFree(file_path);
+            }
+            result.Release();
+        }
     }
     else {
         var tmp = buffer(MAX_PATH, 1);
@@ -228,6 +233,7 @@ var browsForFolder = function (hWnd) {
         }
     }
 
+    noframe = false;
 };
 
 var mouseUp = function (hWnd) {
@@ -546,4 +552,9 @@ function initenv() {
 initenv();
 setFactor();
 winMain();
+if (initiallized && pfd) {
+    pfd.Release();
+    CoDisconnectObject(pfd, 0);
+    CoUninitialize();
+}
 ExitProcess();
