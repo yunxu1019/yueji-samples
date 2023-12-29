@@ -198,7 +198,7 @@ var browsForFolder = function (hWnd) {
             pfd.SetOptions(flags | FOS_FORCEFILESYSTEM);
         }
     }
-    if (initiallized) {
+    if (pfd) {
         hr = pfd.Show(hWnd);
         var result = 0;
         hr = pfd.GetResult(addr(result));
