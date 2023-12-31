@@ -162,7 +162,21 @@ var choosingfn = function (hWnd, uMsg, lParam, lpData) {
 }
 var initiallized = false;
 var pfd = 0;
-IFileDialog: pfd;
+IFileDialog: pfd;// 已定义的结构体，可用标签指明类型
+
+//defer: 类似go语言中的defer
+//       将语句放到函数return以后执行
+//       常用于关闭句柄的语句之前
+defer: if (pfd) {
+    alert("您在窗口关闭前使用了COM组件选择文件夹。\r\n此组件仅在Vista及以上版本的windows可用！", '延迟执行的代码：');
+    pfd.Release();
+    CoDisconnectObject(pfd, 0);
+    CoUninitialize();
+}
+else {
+    alert("您没有使用COM组件选择文件夹", "延迟执行的代码：");
+}
+
 var browsForFolder = function (hWnd) {
     var title = L`选择文件夹`;
     var CLSID_FileOpenDialog = G`dc1c5a9c-e88a-4dde-a5a1-60f82a20aef7`;
@@ -552,9 +566,3 @@ function initenv() {
 initenv();
 setFactor();
 winMain();
-if (initiallized && pfd) {
-    pfd.Release();
-    CoDisconnectObject(pfd, 0);
-    CoUninitialize();
-}
-ExitProcess();
