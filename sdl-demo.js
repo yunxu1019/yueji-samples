@@ -15,8 +15,7 @@ import {
     SDL_Quit
 } from cdecl.utf8.include`SDL2.dll`;
 import "sdl/SDL.h";
-import { random, array, mfree, addr, jsfree } from 'yueji';
-import { ExitProcess } from "Kernel32.dll";
+import { random, array, addr, number_tostr } from 'yueji';
 var SCREEN_WIDTH = 640;
 var SCREEN_HEIGHT = 480;
 var flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
@@ -29,9 +28,10 @@ function 渲染(arr, rgb) {
     var r = rgb >> 16 & 0xff;
     var g = rgb >> 8 & 0xff;
     var b = rgb & 0xff;
+    // SDL_Surface: screenSurface;
     var screenSurface = SDL_GetWindowSurface(window);
-    var color = SDL_MapRGB(screenSurface[1/*format*/], r, g, b);
-    var bgcolor = SDL_MapRGB(screenSurface[1/*format*/], 0, 0, 0);
+    var color = SDL_MapRGB(screenSurface[1], r, g, b);
+    var bgcolor = SDL_MapRGB(screenSurface[1], 0, 0, 0);
     var width = SCREEN_WIDTH;
     var height = SCREEN_HEIGHT;
     var rect = new SDL_Rect;
@@ -105,14 +105,22 @@ var 递归排序 = function (arr, left, right) {
     递归排序(arr, left, index - 1);
     递归排序(arr, index + 1, right);
 };
+var arr = null;
 function 演示() {
     ignore = true;
-    rgb = rgb << 8;
-    rgb = (rgb << 3 | rgb >> 21) & 0xffffff;
-    var arr = 随机数组(10);
-    递归排序(arr, 0, arr.length - 1);
+    if (!arr) {
+        rgb = rgb << 8;
+        rgb = (rgb << 3 | rgb >> 21) & 0xffffff;
+        arr = 随机数组(10);
+        渲染(arr, rgb);
+    }
+    else {
+        递归排序(arr, 0, arr.length - 1);
+        arr = null;
+    }
     ignore = false;
 }
+演示();
 var e = new SDL_Event;
 loop: while (SDL_WaitEvent(e)) {
     switch (e.type) {
