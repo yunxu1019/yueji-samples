@@ -12,9 +12,6 @@ import {
     ExitProcess,
     CreateFileW,
 } from "Kernel32.dll";
-var alert = function (content, title = "错误") {
-    MessageBoxW(null, content, title, MB_OK | MB_ICONASTERISK);
-};
 import {
     SHGetSpecialFolderPathW,
     SHBrowseForFolderW,
@@ -101,7 +98,7 @@ import {
     GdipAddPathString,
     GdipWindingModeOutline,
 } from "GdiPlus.dll";
-import { Utf16, addr, buffer, mfree, jsfree, strcpy, dump } from 'yueji';
+import { Utf16, addr, buffer, strcpy, print } from 'yueji';
 var factor = 1.0;
 var w_rect = new SRECT(0, 0, 480, 360);
 var closeBtn = new EFRONT_BUTTON(0, 0, 0, 0, 0);
